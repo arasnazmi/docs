@@ -3,4 +3,210 @@ title: 'Kamera'
 description: 'Kamera'
 ---
 
-Yapım aşamasında..
+<Tip>
+Bölüm bitiminde aşağıdaki konularda deneyim kazanacaksınız
+
+- Gemstone geliştirme kartına nasıl DSI ekran bağlayabileceğinizi.
+- Overlay eklemeyi.
+</Tip>
+
+### CSI Nedir ?
+
+CSI (Camera Serial Interface), mobil cihazlarda ve gömülü sistemlerde yüksek çözünürlüklü kameralar için tasarlanmış bir seri veri yoludur.
+Bu arayüz, MIPI (Mobile Industry Processor Interface) ittifakı tarafından geliştirilmiş olup, işlemci ile kamera sensörü arasında yüksek hızda, güvenilir bir şekilde görüntü ve video verisi aktarımını sağlar.
+Genellikle akıllı telefonlar, dronlar ve mini cep bilgisayarlarla kullanılan kameralarda tercih edilir.
+### Adımlar
+
+<Steps>
+  <Step title="Kablo Bağlantısının Yapılması">
+   Kamera ile Gemstone kartı arasındaki kablonun doğru bir şekilde bağlanması gerekmektedir.
+  </Step>
+  <Step title="Overlay Eklenmesi">
+  CSI kameranın çalışması için boot partition'da yer alan uEnv.txt dosyasına ilgili overlay eklenmelidir.
+  </Step>
+  <Step title="Kartın Yeniden Başlatılması">
+  Tüm bu adımları tamamladıktan sonra cihazı yeniden başlatmak yeterli olacaktır.
+  </Step>
+</Steps>
+
+### 1. Kablo Bağlantısının Yapılması
+
+Kamera ile Gemstone kartı arasındaki kablonun doğru bir şekilde bağlanması için aşağıda yer alan fotoğraftaki gibi bir bağlantı yapmanız gerekmektedir.
+İki sokete de CSI kablosunu bağlayabilirsiniz burada önemli olan taktığınız soketin CSI'ını etkinleştiren overlayi eklemeniz gerekmektedir.
+<Tip>
+Kablonun bakır yollarının yer aldığı kısım soketin beyaz kısmına bakmalıdır.
+</Tip>
+
+<Tip>
+Ethernet soketine uzak olan konnektör CSI0, yakın olan konnektör ise CSI1'dir.
+</Tip>
+
+<Frame caption="Todo: Kamera kablosunun karta bağlanması">
+  <img className="rounded-lg" noZoom src="/images/under-construction.png" />
+</Frame>
+
+### 2. Overlay Eklenmesi
+
+Desteklenen kameraların overlaylerini aşağıdaki komut ile görebilirsiniz.
+
+<CodeGroup>
+
+  ```bash Terminal
+  l /boot/overlays/ | grep "csi"
+  ```
+
+  ```bash Output
+  k3-am67a-t3-gem-o1-csi0-imx219.dtbo*
+  k3-am67a-t3-gem-o1-csi0-ov5640.dtbo*
+  k3-am67a-t3-gem-o1-csi1-imx219.dtbo*
+  ```
+
+</CodeGroup>
+
+Terminal arayüzünden `nano` isimli metin editörünü kullanarak boot klasöründe yer alan `uEnv.txt` dosyasını açınız.
+
+```bash
+sudo nano /boot/uEnv.txt
+```
+<Tip>
+Komutu sudo ile kullandığımız için şifre soracaktır. Değiştirmediyseniz Gem-Imager ile imajı yazarken belirlemiş olduğunuz şifreyi kullanmalısınız.
+</Tip>
+
+`uEnv.txt` dosyasının içinde bu tarz tanımlamalar bulunacaktır.
+
+```
+firstboot=0
+overlays=k3-am67a-t3-gem-o1-uart-ttyama0.dtbo k3-am67a-t3-gem-o1-spidev0.dtbo
+
+bootpart=1:1
+initrdaddr=0x90000000
+fdtoverlayaddr=0x89000000
+get_kern_mmc=load mmc ${bootpart} ${loadaddr} Image
+get_fdt_mmc=load mmc ${bootpart} ${fdtaddr} k3-am67a-t3-gem-o1.dtb;fdt addr ${fdtaddr};fdt resize 8192
+get_initrd_mmc=load mmc ${bootpart} ${initrdaddr} gemstone-image-rd-t3-gem-o1.cpio.gz
+get_overlays=for o in ${overlays}; do load mmc ${bootpart} ${fdtoverlayaddr} overlays/${o};fdt apply ${fdtoverlayaddr}; done
+args_mmc=setenv bootargs console=${console} ${optargs} root=/dev/mmcblk1p2 rw rootfstype=btrfs bootpart=/dev/mmcblk1p1 firstboot=${firstboot} init_fatal_sh=1
+boot_mmc=run get_kern_mmc;run get_fdt_mmc;run get_overlays;run get_initrd_mmc;booti ${loadaddr} ${initrdaddr}:${filesize} ${fdtaddr}
+distro_bootcmd=run args_mmc;run boot_mmc
+```
+
+`overlays=` satırının sonuna boşluk bırakarak aşağıdaki dosyayının adını ekleyiniz.
+
+Bir önceki komutla elde ettiğiniz dosya adını ekleyin. Örneğin CSI0 (ethernete uzak olan konnektör) konnektörüne IMX219 kamerasını bağladığınızda
+```
+k3-am67a-t3-gem-o1-csi0-imx219.dtbo
+```
+dosya adını kullanmalısınız.
+
+`uEnv.txt` dosyasının son hali böyle olacaktır. Uygun dosya adını `<dosya-adi>` kısmına yerleştirmeniz gerekmektedir.
+
+```
+firstboot=0
+overlays=k3-am67a-t3-gem-o1-uart-ttyama0.dtbo k3-am67a-t3-gem-o1-spidev0.dtbo <dosya-adi>
+
+bootpart=1:1
+initrdaddr=0x90000000
+fdtoverlayaddr=0x89000000
+get_kern_mmc=load mmc ${bootpart} ${loadaddr} Image
+get_fdt_mmc=load mmc ${bootpart} ${fdtaddr} k3-am67a-t3-gem-o1.dtb;fdt addr ${fdtaddr};fdt resize 8192
+get_initrd_mmc=load mmc ${bootpart} ${initrdaddr} gemstone-image-rd-t3-gem-o1.cpio.gz
+get_overlays=for o in ${overlays}; do load mmc ${bootpart} ${fdtoverlayaddr} overlays/${o};fdt apply ${fdtoverlayaddr}; done
+args_mmc=setenv bootargs console=${console} ${optargs} root=/dev/mmcblk1p2 rw rootfstype=btrfs bootpart=/dev/mmcblk1p1 firstboot=${firstboot} init_fatal_sh=1
+boot_mmc=run get_kern_mmc;run get_fdt_mmc;run get_overlays;run get_initrd_mmc;booti ${loadaddr} ${initrdaddr}:${filesize} ${fdtaddr}
+distro_bootcmd=run args_mmc;run boot_mmc
+```
+
+
+### 3. Kartın Yeniden Başlatılması
+
+`reboot` komutu ile cihazı yeniden başlatılmalı.
+
+```bash
+sudo reboot
+```
+
+### 4. gemstone-camera-setup Scriptinin Çalıştırılması
+
+`gemstone-camera-setup` scripti ile cihaza bağlı olan kameraların kurulumu sağlanmalıdır.
+
+<CodeGroup>
+
+  ```bash Terminal
+  sudo gemstone-camera-setup
+  ```
+
+  ```bash Output
+  IMX219 Camera 0 detected
+  device = /dev/video-imx219-cam0
+  name = imx219
+  format = [fmt:SRGGB8_1X8/1920x1080]
+  subdev_id = /dev/v4l-imx219-subdev0
+  isp_required = yes
+  ```
+
+</CodeGroup>
+
+Yukarıdakine benzer bir çıktı almanız durumunda karta kamerayı başarıyla bağlamışsınızdır.
+
+### 5. Kamera Ayarları
+
+İlk başta aşağıdaki komut ile bir kamera sensörünün çekirdek sürücüsü (kernel driver) ile kullanıcı alanı (user space) uygulamaları arasında doğru bir iletişim kurulmasını sağlamak için kullanılır.
+Komut çalıştırıldığında, IMX219 kamera sensörünün video çıkışı 640x480 çözünürlüğe ve SRGGB8 formatına ayarlanır. Bu ayar, sonraki aşamada bu veri akışını kullanacak olan uygulamaların (örneğin, bir kamera uygulaması veya gstreamer) doğru veriyi almasını sağlar.
+<CodeGroup>
+
+  ```bash Terminal
+  media-ctl -V '"imx219 5-0010":0[fmt:SRGGB8_1X8/640x480 field:none]'
+  ```
+
+  ```bash Output
+TODO: Eklenecek
+  ```
+</CodeGroup>
+
+Kameranın desteklediği formatlara aşağıdaki komuttan ulaşabilirsiniz.
+
+```bash
+v4l2-ctl -d /dev/video-imx219-cam0 --list-formats
+```
+
+<Tip>
+`/dev/video-imx219-cam0` kısmına `gemstone-camera-setup` scriptinin çıktısında belirtilen cihazı girmelisiniz.
+</Tip>
+
+Aşağıda yer alan ayarlar, kameranın kazanç ve pozlama değerlerini makul bir varsayılan değere ayarlar.
+Görüntünüzün soluk, çok karanlık veya hatta boş olduğunu fark ederseniz, kendi aydınlatma ortamınıza göre bu parametreleri ayarlamanız gerekebilir.
+Görüntüyü düzgün gözlemlemiyorsanız, bu ayarların yanlış olduğunun bir işareti olabilir.
+
+```bash İç Mekan Işığı
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=digital_gain=2048
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=analogue_gain=230
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=exposure=1750
+```
+
+```bash Doğal Işık
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=digital_gain=1000
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=analogue_gain=100
+v4l2-ctl -d /dev/v4l-subdev2 --set-ctrl=exposure=1000
+```
+
+### 6. Fotoğraf Çekme
+
+Aşağıdaki komutu çalıştırarak .jpg formatında görüntü yakalayabilirsiniz.
+
+```bash
+gst-launch-1.0 -v v4l2src num-buffers=5 device=/dev/video3 io-mode=dmabuf ! \
+    video/x-bayer, width=1920, height=1080, framerate=30/1, format=rggb ! \
+    bayer2rgb ! videoconvert ! jpegenc ! \
+    multifilesink location="imx219-image-%d.jpg"
+```
+
+### 7. Video Çekme
+
+Aşağıdaki komutu çalıştırarak .mp4 formatında bir video kaydı (100 kare) çekebilirsiniz.
+
+```bash
+gst-launch-1.0 v4l2src device=/dev/video-imx219-cam0 num-buffers=100 io-mode=dmabuf ! \
+    video/x-bayer, width=640, height=480, format=rggb,depth=8 ! \
+    queue ! bayer2rgb ! queue ! videoconvert ! video/x-raw,format=NV12 ! \
+    queue ! v4l2h264enc ! queue !  h264parse ! mp4mux  ! filesink location=t3-gem-o1.mp4
+```
