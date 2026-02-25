@@ -333,7 +333,13 @@
               "en/projects/ardupilot",
               "en/projects/vtol",
               "en/projects/swupdate",
-              "en/projects/mediabox"
+              "en/projects/mediabox",
+              {
+                "group": "Teknofest",
+                "pages": [
+                  "en/projects/teknofest-suv"
+                ]
+              }
             ]
           },
           {
