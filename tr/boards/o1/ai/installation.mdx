@@ -1,0 +1,31 @@
+---
+title: 'Kurulum'
+description: 'T3 Edge AI Paketi Kurulumu'
+---
+
+Bu bölümde, T3 Gemstone O1 geliştirme kartına Edge AI paketinin nasıl kurulacağı hakkında bilgi verilecektir.
+Bu paketler sayesinde yapay zeka hızlandırıcılarını kullanarak görüntü işleme işlemlerini gerçekleştirebileceksiniz.
+
+<Steps>
+  <Step title="Paket Deposu Güncelleme">
+    ```bash
+    sudo apt update
+    ```
+    Sistem paket listesini güncel tutmak, kurulum sırasında oluşabilecek bağımlılık hatalarını önler.
+  </Step>
+  <Step title="T3 Edge AI Paketlerini Yükleme">
+    ```bash
+    sudo apt install t3-edgeai-dev
+    ```
+    Bu komut, Edge AI geliştirme araçlarını ve kütüphanelerini tek seferde kurar.
+  </Step>
+  <Step title="Ortam Değişkenlerini Yükleme">
+    ```bash
+    sudo su
+    source /opt/t3-edgeai.env
+    ```
+    Bu komutlar, ``root`` kullanıcısına geçmenizi ve Edge AI için gerekli olan ortam değişkenlerini yükleminizi sağlar.
+
+    <Warning>Not: Yapay zeka hızlandırıcılarının kullanılması sebebiyle işlemler donanım seviyesinde gerçekleştirilmektedir. Bu nedenle ilgili adımların root kullanıcısı altında yürütülmesi gerekmektedir.</Warning>
+  </Step>
+</Steps>
