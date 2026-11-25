@@ -22,12 +22,26 @@ Bu paketler sayesinde yapay zeka hızlandırıcılarını kullanarak görüntü 
     ```bash
     sudo apt install t3-gem-o1-edgeai
     ```
-    Bu komut, Edge AI geliştirme araçlarını ve kütüphanelerini tek seferde kurar.
+    Bu komut, Edge AI geliştirme araçlarını ve kütüphanelerini, yapay zeka hızlandırıcılarının çalıştırdığı firmware ile
+    birlikte tek seferde kurar.
+
+    <Note>
+    Kartınızda aynı dosyaları içeren `t3-edgeai-dev` paketi kuruluysa `t3-gem-o1-edgeai` onun yerini alır; apt, kurulum
+    sırasında `t3-edgeai-dev` paketini kaldıracağını bildirir. Bu beklenen bir durumdur, onaylayarak devam edebilirsiniz.
+    </Note>
   </Step>
 
-  <Step title="Edge AI Overlay Aktifleştirme">
+  <Step title="Edge AI Overlay Kontrolü">
 
-    Terminal arayüzünden `nano` isimli metin editörünü kullanarak boot klasöründe yer alan `uEnv.txt` dosyasını açınız.
+    Paket kurulurken `k3-am67a-t3-gem-o1-edgeai-apps.dtbo` overlay dosyası, `/boot/uEnv.txt` dosyasındaki `overlays=`
+    satırının sonuna otomatik olarak eklenir. Eklendiğini aşağıdaki komutla kontrol edebilirsiniz:
+
+    ```bash
+    grep '^overlays=' /boot/uEnv.txt
+    ```
+
+    Çıktıda `k3-am67a-t3-gem-o1-edgeai-apps.dtbo` yer almıyorsa overlay dosyasını elle ekleyin. Terminal arayüzünden
+    `nano` isimli metin editörünü kullanarak boot klasöründe yer alan `uEnv.txt` dosyasını açınız.
 
     ```bash
     sudo nano /boot/uEnv.txt
@@ -48,13 +62,14 @@ Bu paketler sayesinde yapay zeka hızlandırıcılarını kullanarak görüntü 
 
     <SnippetUEnvEdit />
 
-    Overlay dosyasını tanımladıktan sonra, yapılan değişikliklerin sistem tarafından uygulanabilmesi için kartın
-    yeniden başlatılması gerekilmektedir.
+  </Step>
 
+  <Step title="Kartı Yeniden Başlatma">
     ```bash
-      sudo reboot
+    sudo reboot
     ```
-
+    Overlay'in uygulanması ve yapay zeka hızlandırıcılarının yeni firmware ile açılması için kartın yeniden başlatılması
+    gerekmektedir.
   </Step>
 
   <Step title="Ortam Değişkenlerini Yükleme">

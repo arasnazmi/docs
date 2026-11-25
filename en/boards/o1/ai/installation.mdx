@@ -22,12 +22,27 @@ With these packages, you will be able to perform image processing operations usi
     ```bash
     sudo apt install t3-gem-o1-edgeai
     ```
-    This command installs the Edge AI development tools and libraries in a single step.
+    This command installs the Edge AI development tools and libraries, together with the firmware that the AI
+    accelerators run, in a single step.
+
+    <Note>
+      If the `t3-edgeai-dev` package, which contains the same files, is installed on your board, `t3-gem-o1-edgeai`
+      replaces it: apt reports that it will remove `t3-edgeai-dev` during the installation. This is expected; confirm to
+      continue.
+    </Note>
   </Step>
 
-  <Step title="Activate Edge AI Overlay">
+  <Step title="Check the Edge AI Overlay">
 
-    Open the `uEnv.txt` file located in the boot directory using the `nano` text editor from the terminal interface.
+    While the package is installed, the `k3-am67a-t3-gem-o1-edgeai-apps.dtbo` overlay is appended to the `overlays=`
+    line of `/boot/uEnv.txt` automatically. You can check that it is there with the following command:
+
+    ```bash
+    grep '^overlays=' /boot/uEnv.txt
+    ```
+
+    If `k3-am67a-t3-gem-o1-edgeai-apps.dtbo` is not in the output, add the overlay manually. Open the `uEnv.txt` file
+    located in the boot directory using the `nano` text editor from the terminal interface.
 
     ```bash
     sudo nano /boot/uEnv.txt
@@ -48,12 +63,13 @@ With these packages, you will be able to perform image processing operations usi
 
     <SnippetUEnvEdit />
 
-    After defining the overlay file, the board must be rebooted for the changes to be applied by the system.
+  </Step>
 
+  <Step title="Reboot the Board">
     ```bash
-      sudo reboot
+    sudo reboot
     ```
-
+    The board must be rebooted to apply the overlay and to start the AI accelerators with the new firmware.
   </Step>
 
   <Step title="Load Environment Variables">
